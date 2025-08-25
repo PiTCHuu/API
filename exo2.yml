@@ -1,0 +1,62 @@
+openapi: "3.0.3"
+info:
+  title: User management APi
+  version: "1.0.0"
+servers:
+  - url: http://localhost:8080
+paths:
+  /users:
+    get:
+      parameters:
+        - name: page
+          in: query
+          schema:
+            type: integer
+        - name: size
+          in: query
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UsersList"
+
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                example:
+                  error: "Bad types for provided query parameters"
+
+components:
+  schemas:
+    User:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        email:
+          type: string
+          format: email
+      required:
+        - id
+        - name
+        - email
+      example:
+        id: 1
+        name: Amboara
+        email: amboara@gmail.com
+    UsersList:
+      type: array
+      items:
+        $ref: "#/components/schemas/User"
