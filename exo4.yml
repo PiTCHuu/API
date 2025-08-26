@@ -1,0 +1,84 @@
+openapi: 3.0.3
+info:
+  title: Product Management API
+  version: 1.0.0
+servers:
+  - url: http://localhost:8080
+
+paths:
+  /products:
+    get:
+      summary: Get products
+      description: Returns a list of products with optional filtering and pagination
+      parameters:
+        - $ref: "#/components/parameters/limitParam"
+        - $ref: "#/components/parameters/searchParam"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProductsList"
+              examples:
+                multipleProducts:
+                  summary: Example with multiple products
+                  value:
+                    - name: "Laptop Gaming"
+                      expiration_datetime: "2025-12-31T23:59:59Z"
+                      price: 1299.99
+                    - name: "Wireless Headphones"
+                      expiration_datetime: "2026-03-20T18:30:00Z"
+                      price: 75.0
+                emptyList:
+                  summary: Example with empty list
+                  value: []
+
+components:
+  schemas:
+    Product:
+      type: object
+      properties:
+        name:
+          type: string
+          description: Product name
+          example: "Laptop Gaming"
+        expiration_datetime:
+          type: string
+          format: date-time
+          description: Expiration date and time
+          example: "2025-12-31T23:59:59Z"
+        price:
+          type: number
+          format: float
+          description: Product price
+          example: 1299.99
+      required:
+        - name
+        - expiration_datetime
+        - price
+
+    ProductsList:
+      type: array
+      items:
+        $ref: "#/components/schemas/Product"
+      description: List of products
+
+  parameters:
+    limitParam:
+      name: limit
+      in: query
+      description: Maximum number of items to return
+      required: false
+      schema:
+        type: integer
+      example: 25
+
+    searchParam:
+      name: q
+      in: query
+      description: Search term to filter products by name
+      required: false
+      schema:
+        type: string
+      example: "smartphone"

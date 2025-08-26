@@ -1,0 +1,246 @@
+openapi: 3.0.3
+info:
+  title: Product and Order Management API
+  version: 1.0.0
+  description: API for managing products and orders with Basic Authentication
+servers:
+  - url: http://localhost:8080
+tags:
+  - name: Products
+    description: Operations related to products
+  - name: Orders
+    description: Operations related to orders (some require authentication)
+
+paths:
+  /products:
+    get:
+      tags:
+        - Products
+      summary: Get products
+      description: Returns a list of products with optional filtering and pagination
+      parameters:
+        - $ref: "#/components/parameters/limitParam"
+        - $ref: "#/components/parameters/searchParam"
+      responses:
+        "200":
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProductsList"
+              examples:
+                multipleProducts:
+                  summary: Example with multiple products
+                  value:
+                    - name: "Laptop Gaming"
+                      expiration_datetime: "2025-12-31T23:59:59Z"
+                      price: 1299.99
+                    - name: "Smartphone Pro"
+                      expiration_datetime: "2024-06-15T12:00:00Z"
+                      price: 899.50
+                emptyList:
+                  summary: Example with empty list
+                  value: []
+
+  /orders:
+    get:
+      tags:
+        - Orders
+      summary: Get orders
+      description: Returns a paginated list of orders
+      parameters:
+        - $ref: "#/components/parameters/pageParam"
+        - $ref: "#/components/parameters/sizeParam"
+      responses:
+        "200":
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OrdersList"
+              examples:
+                multipleOrders:
+                  summary: Example with multiple orders
+                  value:
+                    - identifier: 1001
+                      customer_name: "Mamy"
+                      creation_datetime: "2024-01-15T10:30:00Z"
+                      total_amount: 2199.49
+                    - identifier: 1002
+                      customer_name: "Jane Smith"
+                      creation_datetime: "2024-01-16T14:45:00Z"
+                      total_amount: 899.50
+                emptyOrders:
+                  summary: Example with empty orders list
+                  value: []
+
+    post:
+      tags:
+        - Orders
+      summary: Create a new order
+      description: Create a new order (requires Basic Authentication)
+      security:
+        - basicAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Order"
+            examples:
+              newOrder:
+                summary: Example of a new order
+                value:
+                  customer_name: "Alice Johnson"
+                  creation_datetime: "2024-01-17T09:15:00Z"
+                  total_amount: 1499.99
+      responses:
+        "201":
+          description: Order created successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Order"
+              examples:
+                createdOrder:
+                  summary: Example of created order
+                  value:
+                    identifier: 1003
+                    customer_name: "Bob Tobias"
+                    creation_datetime: "2024-01-17T09:15:00Z"
+                    total_amount: 599.99
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              example:
+                error: "Authentication required"
+
+components:
+  schemas:
+    Product:
+      type: object
+      properties:
+        name:
+          type: string
+          description: Product name
+          example: "Laptop Gaming"
+        expiration_datetime:
+          type: string
+          format: date-time
+          description: Expiration date and time
+          example: "2025-12-31T23:59:59Z"
+        price:
+          type: number
+          format: float
+          description: Product price
+          example: 1299.99
+      required:
+        - name
+        - expiration_datetime
+        - price
+
+    ProductsList:
+      type: array
+      items:
+        $ref: "#/components/schemas/Product"
+      description: List of products
+
+    Order:
+      type: object
+      properties:
+        identifier:
+          type: integer
+          description: Unique order identifier
+          example: 1001
+        customer_name:
+          type: string
+          description: Customer name
+          example: "Mammy"
+        creation_datetime:
+          type: string
+          format: date-time
+          description: Order creation date and time
+          example: "2024-01-15T10:30:00Z"
+        total_amount:
+          type: number
+          format: float
+          description: Total order amount
+          example: 2199.49
+      required:
+        - customer_name
+        - creation_datetime
+        - total_amount
+
+    OrdersList:
+      type: array
+      items:
+        $ref: "#/components/schemas/Order"
+      description: List of orders
+
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+          description: Error message
+      required:
+        - error
+
+  parameters:
+    limitParam:
+      name: limit
+      in: query
+      description: Maximum number of items to return
+      required: false
+      schema:
+        type: integer
+        format: int32
+        minimum: 1
+        maximum: 100
+        default: 10
+      example: 25
+
+    searchParam:
+      name: q
+      in: query
+      description: Search term to filter products by name
+      required: false
+      schema:
+        type: string
+        minLength: 1
+        maxLength: 100
+      example: "smartphone"
+
+    pageParam:
+      name: page
+      in: query
+      description: Page number for pagination (starts from 0)
+      required: false
+      schema:
+        type: integer
+        format: int32
+        minimum: 0
+        default: 0
+      example: 0
+
+    sizeParam:
+      name: size
+      in: query
+      description: Number of items per page
+      required: false
+      schema:
+        type: integer
+        format: int32
+        minimum: 1
+        maximum: 50
+        default: 20
+      example: 10
+
+  securitySchemes:
+    basicAuth:
+      type: http
+      scheme: basic
+      description: Basic Authentication
